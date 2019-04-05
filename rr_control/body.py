@@ -5,20 +5,73 @@ import paho.mqtt.client
 import click
 import click_log
 import logging
+import json
 from .at_serial import ATSerial
 
 logging.basicConfig(format='%(asctime)s %(message)s')
 
 
+def left_arm_0(at, payload):
+    at.command("$S0=%d" % int(180 - payload))
+
+def left_arm_1(at, payload):
+    at.command("$S1=%d" % int(180 - payload))
+
+def left_elbow_0(at, payload):
+    at.command("$S2=%d" % payload)
+
+def left_elbow_1(at, payload):
+    if payload > 128:
+        return
+    at.command("$S3=%d" % payload)
+
+def right_arm_0(at, payload):
+    at.command("$S5=%d" %  payload)
+
+def right_arm_1(at, payload):
+    at.command("$S6=%d" % payload)
+
+def right_elbow_0(at, payload):
+    at.command("$S7=%d" % int(180 - payload))
+
+def right_elbow_1(at, payload):
+    if payload > 140:
+        return
+    at.command("$S8=%d" % int(180 - payload))
+
+def body_save(at, payload):
+    at.command("$SAVE")
+
+def body_chest(at, payload):
+    at.command("$S4=%d" % payload)
+
+# def left_arm_wave(at, payload):
+#     at.command("$S3=70")
+#     time.sleep(2)
+#     at.command("$S3=130")
+#     time.sleep(2)
+#     at.command("$S3=70")
+
+
 topics = {
-    'ronny/left-hand'
+    'ronny/left/arm/0': left_arm_0,
+    'ronny/left/arm/1': left_arm_1,
+    'ronny/left/elbow/0': left_elbow_0,
+    'ronny/left/elbow/1': left_elbow_1,
+    'ronny/right/arm/0': right_arm_0,
+    'ronny/right/arm/1': right_arm_1,
+    'ronny/right/elbow/0': right_elbow_0,
+    'ronny/right/elbow/1': right_elbow_1,
+    'ronny/body/save': body_save,
+    'ronny/body/chest': body_chest,
+    # 'ronny/gesture/left-arm-wave': left_arm_wave
 }
 
 
 def mqtt_on_connect(mqttc, userdata, flags, rc):
     logging.info('Connected to MQTT broker with code %s', rc)
 
-    for topic in ('at/+', ):
+    for topic in topics:
         logging.debug('Subscribe: %s', topic)
         mqttc.subscribe(topic)
 
@@ -30,14 +83,16 @@ def mqtt_on_disconnect(mqttc, userdata, rc):
 def mqtt_on_message(mqttc, userdata, message):
     logging.debug('Message %s %s', message.topic, message.payload)
 
-    cmd = message.topic.split('/')[1]
+    fce = topics.get(message.topic, None)
 
-    cmd = '$' + cmd.upper() + '=' + message.payload.decode()
+    if fce:
+        try:
+            payload = json.loads(message.payload.decode()) if message.payload else None
 
-    logging.debug("at cmd %s", cmd)
+            fce(userdata['at'], payload)
 
-    userdata['at'].command(cmd)
-
+        except Exception as e:
+            logging.error(e)
 
 
 @click.command()
