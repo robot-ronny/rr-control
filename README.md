@@ -10,6 +10,8 @@ cd rr-control
 sudo pip3 install -e .
 ```
 
+Parameter `-e` creates symlinks so you can edit original files.
+
 ## Add udev rules
 /etc/udev/rules.d/10-ronny-wheels.rules
 ```
