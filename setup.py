@@ -34,6 +34,8 @@ setup(
         'console_scripts': [
             'rr-control-wheels = rr_control.wheels:main',
             'rr-control-body = rr_control.body:main',
+            'rr-control-eye = rr_control.eye:main',
+
         ]
     },
     long_description=long_description,

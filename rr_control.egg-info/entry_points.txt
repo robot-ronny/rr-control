@@ -1,0 +1,5 @@
+[console_scripts]
+rr-control-body = rr_control.body:main
+rr-control-eye = rr_control.eye:main
+rr-control-wheels = rr_control.wheels:main
+
