@@ -12,8 +12,6 @@ logging.basicConfig(format='%(asctime)s %(message)s')
 
 
 def eye_command(at, payload):
-    print(payload)
-    print("$EYE=%s" % payload)
     at.command("$EYE=%s" % payload)
 
 # def left_arm_wave(at, payload):
