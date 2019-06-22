@@ -21,29 +21,38 @@ def left_elbow_0(at, payload):
     at.command("$S2=%d" % payload)
 
 def left_elbow_1(at, payload):
-    if payload > 128:
+    if payload > 150:
         return
     at.command("$S3=%d" % payload)
 
 def right_arm_0(at, payload):
-    at.command("$S5=%d" %  payload)
+    at.command("$S7=%d" %  payload)
 
 def right_arm_1(at, payload):
-    at.command("$S6=%d" % payload)
+    at.command("$S8=%d" % payload)
 
 def right_elbow_0(at, payload):
-    at.command("$S7=%d" % int(180 - payload))
+    at.command("$S12=%d" % int(180 - payload))
 
 def right_elbow_1(at, payload):
-    if payload > 140:
+    if payload > 137:
         return
-    at.command("$S8=%d" % int(180 - payload))
+    at.command("$S14=%d" % int(180 - payload))
 
 def body_save(at, payload):
     at.command("$SAVE")
 
 def body_chest(at, payload):
+    at.command("$S6=%d" % payload)
+
+def body_bend(at, payload):
+    if payload < 80 or payload > 100:
+        return
+    at.command("$S17=%d" % payload)
+
+def body_head(at, payload):
     at.command("$S4=%d" % payload)
+
 
 # def left_arm_wave(at, payload):
 #     at.command("$S3=70")
@@ -54,8 +63,8 @@ def body_chest(at, payload):
 
 
 topics = {
-    'ronny/left/arm/0': left_arm_0,
     'ronny/left/arm/1': left_arm_1,
+    'ronny/left/arm/0': left_arm_0,
     'ronny/left/elbow/0': left_elbow_0,
     'ronny/left/elbow/1': left_elbow_1,
     'ronny/right/arm/0': right_arm_0,
@@ -64,6 +73,8 @@ topics = {
     'ronny/right/elbow/1': right_elbow_1,
     'ronny/body/save': body_save,
     'ronny/body/chest': body_chest,
+    'ronny/body/bend': body_bend,
+    'ronny/body/head': body_head
     # 'ronny/gesture/left-arm-wave': left_arm_wave
 }
 
@@ -88,6 +99,10 @@ def mqtt_on_message(mqttc, userdata, message):
     if fce:
         try:
             payload = json.loads(message.payload.decode()) if message.payload else None
+
+            if payload > 180 or payload < 0:
+                mqttc.publish("ronny/log/error", "angle out of range")
+                return
 
             fce(userdata['at'], payload)
 
